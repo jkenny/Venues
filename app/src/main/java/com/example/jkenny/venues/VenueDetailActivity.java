@@ -5,18 +5,23 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.PersistableBundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.jkenny.venues.foursquare.FoursquareApi;
+import com.example.jkenny.venues.foursquare.FoursquareApiConstants;
+import com.example.jkenny.venues.foursquare.FoursquareResponseWrapper;
 import com.squareup.picasso.Picasso;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import hugo.weaving.DebugLog;
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 public class VenueDetailActivity extends Activity {
@@ -30,13 +35,15 @@ public class VenueDetailActivity extends Activity {
     @InjectView(R.id.detail_open_in_browser)
     Button openInBrowser;
 
+    FoursquareApi foursquareApi;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_venue_detail);
         ButterKnife.inject(this);
-        initImage();
         initButtons();
+        initRestAdapter();
     }
 
     @DebugLog
@@ -49,6 +56,27 @@ public class VenueDetailActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        foursquareApi.getVenue(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, "4c2b5abe355cef3bdd3fcd56", makeApiCallbackHandler());
+    }
+
+    private Callback<FoursquareResponseWrapper> makeApiCallbackHandler() {
+        return new Callback<FoursquareResponseWrapper>() {
+            @Override
+            public void success(FoursquareResponseWrapper venue, Response response) {
+                initImage(venue.response.venue.bestPhoto.url());
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+
+            }
+        };
+    }
+
+    @DebugLog
+    private void initImage(String url) {
+        Picasso.with(this).load(url).into(image);
     }
 
     @DebugLog
@@ -75,9 +103,14 @@ public class VenueDetailActivity extends Activity {
         super.onCreate(savedInstanceState, persistentState);
     }
 
-    private void initImage() {
-        Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(image);
+    private void initRestAdapter() {
+        RestAdapter adapter = new RestAdapter.Builder()
+                .setEndpoint("https://api.foursquare.com/v2/")
+                .build();
+
+        foursquareApi = adapter.create(FoursquareApi.class);
     }
+
     private void initButtons() {
         openInBrowser.setOnClickListener(new View.OnClickListener() {
             @Override
