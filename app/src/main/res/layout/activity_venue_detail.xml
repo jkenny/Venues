@@ -13,8 +13,7 @@
         android:id="@+id/detail_image"
         android:layout_width="280dp"
         android:layout_height="280dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@color/highlighted_text_material_dark" />
+        android:layout_gravity="center_horizontal" />
 
     <TextView
         android:id="@+id/detail_title"
