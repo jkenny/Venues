@@ -104,12 +104,6 @@ public class VenueDetailActivity extends Activity {
         super.onDestroy();
     }
 
-    @DebugLog
-    @Override
-    public void onCreate(Bundle savedInstanceState, PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
-    }
-
     private void initRestAdapter() {
         RestAdapter adapter = new RestAdapter.Builder()
                 .setEndpoint("https://api.foursquare.com/v2/")
