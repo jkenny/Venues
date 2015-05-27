@@ -1,4 +1,4 @@
-package com.example.jkenny.venues.foursquare;
+package com.example.jkenny.venues.client.foursquare;
 
 public class Photo {
     public String prefix;

@@ -1,19 +1,21 @@
-package com.example.jkenny.venues;
+package com.example.jkenny.venues.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.jkenny.venues.foursquare.FoursquareApi;
-import com.example.jkenny.venues.foursquare.FoursquareApiConstants;
-import com.example.jkenny.venues.foursquare.FoursquareResponseWrapper;
-import com.example.jkenny.venues.foursquare.Venue;
+import com.example.jkenny.venues.R;
+import com.example.jkenny.venues.client.foursquare.FoursquareApi;
+import com.example.jkenny.venues.client.foursquare.FoursquareApiConstants;
+import com.example.jkenny.venues.client.foursquare.FoursquareResponseWrapper;
+import com.example.jkenny.venues.client.foursquare.Venue;
+import com.example.jkenny.venues.client.foursquare.VenueResponse;
 import com.squareup.picasso.Picasso;
 
 import butterknife.ButterKnife;
@@ -36,6 +38,14 @@ public class VenueDetailActivity extends Activity {
 
     FoursquareApi foursquareApi;
 
+    private static final String EXTRA_VENUE_ID = "com.example.jkenny.venues.venue.id";
+
+    public static Intent makeIntent(Context context, Venue venue) {
+        Intent intent = new Intent(context, VenueDetailActivity.class);
+        intent.putExtra(EXTRA_VENUE_ID, venue.id);
+        return intent;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,13 +65,9 @@ public class VenueDetailActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        foursquareApi.getVenue(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, "4c2b5abe355cef3bdd3fcd56", makeApiCallbackHandler());
-    }
-
-    private Callback<FoursquareResponseWrapper> makeApiCallbackHandler() {
-        return new Callback<FoursquareResponseWrapper>() {
+        foursquareApi.getVenue(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, getIntent().getStringExtra(EXTRA_VENUE_ID), new Callback<FoursquareResponseWrapper<VenueResponse>>() {
             @Override
-            public void success(FoursquareResponseWrapper venue, Response response) {
+            public void success(FoursquareResponseWrapper<VenueResponse> venue, Response response) {
                 initDetails(venue.response.venue);
             }
 
@@ -69,7 +75,7 @@ public class VenueDetailActivity extends Activity {
             public void failure(RetrofitError error) {
 
             }
-        };
+        });
     }
 
     @DebugLog

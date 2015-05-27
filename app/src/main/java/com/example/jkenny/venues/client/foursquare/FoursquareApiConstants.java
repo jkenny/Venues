@@ -1,4 +1,4 @@
-package com.example.jkenny.venues.foursquare;
+package com.example.jkenny.venues.client.foursquare;
 
 /**
  * Created by jkenny on 26/05/2015.
