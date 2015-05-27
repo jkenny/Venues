@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.example.jkenny.venues.foursquare.FoursquareApi;
 import com.example.jkenny.venues.foursquare.FoursquareApiConstants;
 import com.example.jkenny.venues.foursquare.FoursquareResponseWrapper;
+import com.example.jkenny.venues.foursquare.Venue;
 import com.squareup.picasso.Picasso;
 
 import butterknife.ButterKnife;
@@ -30,8 +31,6 @@ public class VenueDetailActivity extends Activity {
     ImageView image;
     @InjectView(R.id.detail_title)
     TextView title;
-    @InjectView(R.id.detail_phrases)
-    TextView phrases;
     @InjectView(R.id.detail_open_in_browser)
     Button openInBrowser;
 
@@ -42,7 +41,6 @@ public class VenueDetailActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_venue_detail);
         ButterKnife.inject(this);
-        initButtons();
         initRestAdapter();
     }
 
@@ -64,7 +62,7 @@ public class VenueDetailActivity extends Activity {
         return new Callback<FoursquareResponseWrapper>() {
             @Override
             public void success(FoursquareResponseWrapper venue, Response response) {
-                initImage(venue.response.venue.bestPhoto.url());
+                initDetails(venue.response.venue);
             }
 
             @Override
@@ -75,8 +73,17 @@ public class VenueDetailActivity extends Activity {
     }
 
     @DebugLog
-    private void initImage(String url) {
-        Picasso.with(this).load(url).into(image);
+    private void initDetails(final Venue venue) {
+        title.setText(venue.name);
+        Picasso.with(this).load(venue.bestPhoto.url()).into(image);
+        openInBrowser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(venue.canonicalUrl));
+                startActivity(intent);
+            }
+        });
     }
 
     @DebugLog
@@ -109,16 +116,5 @@ public class VenueDetailActivity extends Activity {
                 .build();
 
         foursquareApi = adapter.create(FoursquareApi.class);
-    }
-
-    private void initButtons() {
-        openInBrowser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("http://www.gilt.com"));
-                startActivity(intent);
-            }
-        });
     }
 }
