@@ -11,8 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.jkenny.venues.R;
-import com.example.jkenny.venues.client.foursquare.FoursquareApi;
 import com.example.jkenny.venues.client.foursquare.FoursquareApiConstants;
+import com.example.jkenny.venues.client.foursquare.FoursquareClient;
 import com.example.jkenny.venues.client.foursquare.FoursquareResponseWrapper;
 import com.example.jkenny.venues.client.foursquare.Venue;
 import com.example.jkenny.venues.client.foursquare.VenueResponse;
@@ -22,7 +22,6 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import hugo.weaving.DebugLog;
 import retrofit.Callback;
-import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -35,8 +34,6 @@ public class VenueDetailActivity extends Activity {
     TextView title;
     @InjectView(R.id.detail_open_in_browser)
     Button openInBrowser;
-
-    FoursquareApi foursquareApi;
 
     private static final String EXTRA_VENUE_ID = "com.example.jkenny.venues.venue.id";
 
@@ -51,7 +48,6 @@ public class VenueDetailActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_venue_detail);
         ButterKnife.inject(this);
-        initRestAdapter();
     }
 
     @DebugLog
@@ -65,7 +61,7 @@ public class VenueDetailActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        foursquareApi.getVenue(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, getIntent().getStringExtra(EXTRA_VENUE_ID), new Callback<FoursquareResponseWrapper<VenueResponse>>() {
+        FoursquareClient.getInstance().getVenue(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, getIntent().getStringExtra(EXTRA_VENUE_ID), new Callback<FoursquareResponseWrapper<VenueResponse>>() {
             @Override
             public void success(FoursquareResponseWrapper<VenueResponse> venue, Response response) {
                 initDetails(venue.response.venue);
@@ -80,16 +76,18 @@ public class VenueDetailActivity extends Activity {
 
     @DebugLog
     private void initDetails(final Venue venue) {
-        title.setText(venue.name);
-        Picasso.with(this).load(venue.bestPhoto.url()).into(image);
-        openInBrowser.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(venue.canonicalUrl));
-                startActivity(intent);
-            }
-        });
+        if (title != null) {
+            title.setText(venue.name);
+            Picasso.with(this).load(venue.bestPhoto.url()).into(image);
+            openInBrowser.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(venue.canonicalUrl));
+                    startActivity(intent);
+                }
+            });
+        }
     }
 
     @DebugLog
@@ -108,13 +106,5 @@ public class VenueDetailActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-    }
-
-    private void initRestAdapter() {
-        RestAdapter adapter = new RestAdapter.Builder()
-                .setEndpoint("https://api.foursquare.com/v2/")
-                .build();
-
-        foursquareApi = adapter.create(FoursquareApi.class);
     }
 }

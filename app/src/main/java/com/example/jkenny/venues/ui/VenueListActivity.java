@@ -13,8 +13,8 @@ import com.example.jkenny.venues.R;
 import com.example.jkenny.venues.client.foursquare.ExploreGroup;
 import com.example.jkenny.venues.client.foursquare.ExploreItem;
 import com.example.jkenny.venues.client.foursquare.ExploreResponse;
-import com.example.jkenny.venues.client.foursquare.FoursquareApi;
 import com.example.jkenny.venues.client.foursquare.FoursquareApiConstants;
+import com.example.jkenny.venues.client.foursquare.FoursquareClient;
 import com.example.jkenny.venues.client.foursquare.FoursquareResponseWrapper;
 import com.example.jkenny.venues.client.foursquare.Venue;
 
@@ -25,7 +25,6 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import hugo.weaving.DebugLog;
 import retrofit.Callback;
-import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
@@ -45,14 +44,12 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
     TextView queryInput;
 
     VenueAdapter venueAdapter;
-    FoursquareApi foursquareApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_venue_list);
         ButterKnife.inject(this);
-        initRestAdapter();
         venueAdapter = new VenueAdapter(this);
         venuesListView.setAdapter(venueAdapter);
         venuesListView.setOnItemClickListener(this);
@@ -89,14 +86,6 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
         super.onDestroy();
     }
 
-    private void initRestAdapter() {
-        RestAdapter adapter = new RestAdapter.Builder()
-                .setEndpoint("https://api.foursquare.com/v2/")
-                .build();
-
-        foursquareApi = adapter.create(FoursquareApi.class);
-    }
-
     @DebugLog
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -111,7 +100,7 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
         String near = nearInput.getText().toString();
         String query = queryInput.getText().toString();
 
-        foursquareApi.getVenues(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE,
+        FoursquareClient.getInstance().getVenues(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE,
                 near, query,
                 new Callback<FoursquareResponseWrapper<ExploreResponse>>() {
                     @Override
