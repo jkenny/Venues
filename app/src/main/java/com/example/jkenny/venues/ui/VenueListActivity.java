@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.example.jkenny.venues.R;
 import com.example.jkenny.venues.client.foursquare.ExploreGroup;
@@ -28,10 +30,19 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class VenueListActivity extends Activity implements ListView.OnItemClickListener {
+public class VenueListActivity extends Activity implements ListView.OnItemClickListener, View.OnClickListener {
 
     @InjectView(R.id.master_list)
     ListView venuesListView;
+
+    @InjectView(R.id.list_search)
+    Button searchButton;
+
+    @InjectView(R.id.list_near)
+    TextView nearInput;
+
+    @InjectView(R.id.list_query)
+    TextView queryInput;
 
     VenueAdapter venueAdapter;
     FoursquareApi foursquareApi;
@@ -41,10 +52,11 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_venue_list);
         ButterKnife.inject(this);
+        initRestAdapter();
         venueAdapter = new VenueAdapter(this);
         venuesListView.setAdapter(venueAdapter);
         venuesListView.setOnItemClickListener(this);
-        initRestAdapter();
+        searchButton.setOnClickListener(this);
     }
 
     @DebugLog
@@ -57,25 +69,6 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
     @Override
     protected void onResume() {
         super.onResume();
-
-        foursquareApi.getVenues(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE, "Dublin,Ireland", "", new Callback<FoursquareResponseWrapper<ExploreResponse>>() {
-            @Override
-            public void success(FoursquareResponseWrapper<ExploreResponse> foursquareResponseWrapper, Response response) {
-                List<Venue> venues = new ArrayList<>();
-                for (ExploreGroup group : foursquareResponseWrapper.response.groups) {
-                    for (ExploreItem item : group.items) {
-                        venues.add(item.venue);
-                    }
-                }
-
-                venueAdapter.addAll(venues);
-            }
-
-            @Override
-            public void failure(RetrofitError error) {
-
-            }
-        });
     }
 
     @DebugLog
@@ -104,10 +97,40 @@ public class VenueListActivity extends Activity implements ListView.OnItemClickL
         foursquareApi = adapter.create(FoursquareApi.class);
     }
 
+    @DebugLog
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Venue venue = venueAdapter.getItem(position);
         Intent intent = VenueDetailActivity.makeIntent(this, venue);
         startActivity(intent);
+    }
+
+    @DebugLog
+    @Override
+    public void onClick(View v) {
+        String near = nearInput.getText().toString();
+        String query = queryInput.getText().toString();
+
+        foursquareApi.getVenues(FoursquareApiConstants.CLIENT_ID, FoursquareApiConstants.CLIENT_SECRET, FoursquareApiConstants.VERSION_DATE,
+                near, query,
+                new Callback<FoursquareResponseWrapper<ExploreResponse>>() {
+                    @Override
+                    public void success(FoursquareResponseWrapper<ExploreResponse> foursquareResponseWrapper, Response response) {
+                        List<Venue> venues = new ArrayList<>();
+                        for (ExploreGroup group : foursquareResponseWrapper.response.groups) {
+                            for (ExploreItem item : group.items) {
+                                venues.add(item.venue);
+                            }
+                        }
+
+                        venueAdapter.clear();
+                        venueAdapter.addAll(venues);
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+
+                    }
+                });
     }
 }
